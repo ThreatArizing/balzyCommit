@@ -3,7 +3,7 @@ const { MongoClient } = require("mongodb");
 const cookieParser = require("cookie-parser");
 const express = require("express");
 const app = express();
-const port = process.env.PORT || 8080
+const port = process.env.PORT || 8080;
 if (process.env.NODE_ENV === "production") {
   app.use((req, res, next) => {
     if (req.header("x-forwarded-proto") !== "https")
@@ -93,19 +93,12 @@ async function main() {
     // Find the listing named "Infinite Views" that we created in create.js
     await findOneListingByNameWithoutLog(client, "HS");
 
-    app.get("/", (req, res) => {
-      res.render("index", {
-        text: newGlobal,
-        playerName: Pname,
-      });
-    });
-
     app.post("/", (req, res) => {
       findOneListingByNameWithoutLog(client, "HS");
       newGlobal = result1.score;
       serverHS = req.body.playerCurrentScore;
-      Pname = result1.globalName
-      
+      Pname = result1.globalName;
+
       const serverINT = parseInt(serverHS);
       const newGlobalInt = parseInt(newGlobal);
 
@@ -120,6 +113,13 @@ async function main() {
       } else {
       }
     });
+
+    app.get("/", (req, res) => {
+      res.render("index", {
+        text: newGlobal,
+        playerName: Pname,
+      });
+    });
   } catch (e) {
     console.error(e);
   } finally {
@@ -127,7 +127,6 @@ async function main() {
 }
 
 main().catch(console.error);
-
 
 async function updateListingByName(client, nameOfListing, updatedListing) {
   const result = await client
