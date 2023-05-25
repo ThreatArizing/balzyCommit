@@ -1,0 +1,86 @@
+<script src="https://cdn.tailwindcss.com"></script>
+<style></style>
+
+<body class="overflow-hidden" onload="get()">
+  <div class="fixed text-white ml-2 mt-1 select-none">
+    <span>Score: <span id="scoreEl">0</span></span>
+  </div>
+
+  <div class="fixed text-white inset-0 text-center mt-1 select-none"
+    id="boostStatus">
+    <span>Boost Ready</span>
+  </div>
+
+  <div class="fixed text-white absolute bottom-0 left-0 select-none">
+    <span id="ammoEl">19</span>
+  </div>
+
+  <div class="fixed inset-0 flex items-center justify-center" id="modalEL">
+    <div class="relative bg-white w-2/5 p-6 text-center rounded-3xl">
+      <p class="absolute top-1 text-sm text-grey font-mono">Global High Score:</p>
+      <p class="absolute top-5 text-sm text-grey font-mono"><%= playerName %></p>
+      <p class="absolute top-10 text-sm text-grey font-body" id="globalHighEl"><%= text %> points</p>
+      <p class="absolute top-1 right-14 text-sm text-grey font-mono">High Score:</p>
+      <p class="absolute top-6 right-14 text-sm text-grey font-body" id="highScoreEl">0</p>
+      <h1 class="text-4xl font-bold leading-none" id="bigScoreEl">0</h1>
+      <p class="text-sm text-grey-700 mb-4">Points</p>
+      <form id="form">
+        <input class="bg-gray-200 w-32" placeholder="  name" type="text" id="playerName">
+    </form>
+      <div>
+        <button
+          class="bg-blue-500 text-white w-64 mt-2 py-3 rounded-full text=sm"
+          id="startGameBtn">Initiate Experience
+        </button>
+      </div>
+    </div>
+  </div>
+  <canvas></canvas>
+  <%- include("./game.ejs") %>
+</body>
+<script> 
+  const playerScore = document.querySelector("#highScoreEl");
+  const storedItem = localStorage.getItem("storedItem");
+  
+  const playerName = document.querySelector("#playerName");
+  const storedName = localStorage.getItem("storedName");  
+
+  
+  function save() {
+    const playerScores = document.getElementById("highScoreEl").innerHTML;
+    const playerCurrentScore = document.getElementById("scoreEl").innerHTML;
+    localStorage.setItem("storedItem", playerScores);
+    const data = { playerCurrentScore, storedName };
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data),
+    };
+    fetch('/', options);
+  };
+    
+  function get() {
+    playerScore.innerHTML = storedItem;
+    playerName.value = storedName;
+    const playerScores = document.getElementById("highScoreEl").innerHTML;
+    const playerCurrentScore = document.getElementById("scoreEl").innerHTML;
+    localStorage.setItem("storedItem", playerScores);
+    const data = { playerCurrentScore, storedName };
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data),
+    };
+    fetch('/', options);
+  };
+</script>
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/gsap.min.js"
+  integrity="sha512-UxP+UhJaGRWuMG2YC6LPWYpFQnsSgnor0VUF3BHdD83PS/pOpN+FYbZmrYN+ISX8jnvgVUciqP/fILOXDjZSwg=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+></script>

@@ -1,0 +1,793 @@
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+  const socket = io();
+
+  const canvas = document.querySelector("canvas");
+  const c = canvas.getContext("2d");
+
+  if (innerWidth + innerHeight > 3000) {
+    innerWidth = 1920;
+    innerHeight = 1080;
+  }
+
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+
+  //Movement
+  let upPressed = false;
+  let downPressed = false;
+  let leftPressed = false;
+  let rightPressed = false;
+
+  //ability
+  let spacePressed = false;
+  let used = false;
+
+  //html
+  const scoreEl = document.querySelector("#scoreEl");
+  const modalEl = document.querySelector("#modalEl");
+  const bigScoreEl = document.querySelector("#bigScoreEl");
+  const boostStatus = document.querySelector("#boostStatus");
+  const highScoreEl = document.querySelector("#highScoreEl");
+  const startGameBtn = document.querySelector("#startGameBtn");
+  const ammoEl = document.querySelector("#ammoEl");
+  const ammoInt = parseInt(ammoEl.innerHTML);
+
+  const img = new Image(); // width, height
+  img.src = "./arnold.jpg";
+
+  document.body.addEventListener("keydown", keyDown);
+  document.body.addEventListener("keyup", keyUp);
+
+  function keyDown(event) {
+    //up
+    if (event.keyCode == 87) {
+      upPressed = true;
+    }
+
+    //down
+    if (event.keyCode == 83) {
+      downPressed = true;
+    }
+    //left
+    if (event.keyCode == 65) {
+      leftPressed = true;
+    }
+
+    //right
+    if (event.keyCode == 68) {
+      rightPressed = true;
+    }
+
+    //space
+    if (event.keyCode == 32) {
+      spacePressed = true;
+    }
+  }
+
+  function keyUp(event) {
+    //up
+    if (event.keyCode == 87) {
+      upPressed = false;
+    }
+
+    //down
+    if (event.keyCode == 83) {
+      downPressed = false;
+    }
+    //left
+    if (event.keyCode == 65) {
+      leftPressed = false;
+    }
+
+    //right
+    if (event.keyCode == 68) {
+      rightPressed = false;
+    }
+    //space
+    if (event.keyCode == 32) {
+      spacePressed = false;
+    }
+  }
+
+  class Player {
+    constructor(x, y, radius, color) {
+      this.x = x;
+      this.y = y;
+      this.radius = radius;
+      this.color = color;
+      this.velocity = 4;
+    }
+    Movement() {
+      if (upPressed) {
+        this.y = this.y - this.velocity;
+      }
+      if (downPressed) {
+        this.y = this.y + this.velocity;
+      }
+      if (leftPressed) {
+        this.x = this.x - this.velocity;
+      }
+      if (rightPressed) {
+        this.x = this.x + this.velocity;
+      }
+      //boost
+      if (spacePressed === true && used === false) {
+        used = true;
+        boostStatus.style.display = "none";
+        this.velocity = 10;
+        setTimeout(() => {
+          this.velocity = 4;
+        }, 200);
+        setTimeout(() => {
+          used = false;
+          boostStatus.style.display = "initial";
+        }, 4000);
+      }
+
+      //Border
+      //Top
+      if (this.y < this.radius) {
+        this.y = this.radius;
+      }
+      //Right
+      if (this.x > canvas.width - this.radius) {
+        this.x = canvas.width - this.radius;
+      }
+      //Bot
+      if (this.y > canvas.height - this.radius) {
+        this.y = canvas.height - this.radius;
+      }
+      //Left
+      if (this.x < this.radius) {
+        this.x = this.radius;
+      }
+    }
+    draw() {
+      c.beginPath();
+      c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+      c.fillStyle = this.color;
+      c.fill();
+    }
+  }
+
+  class Projectile {
+    constructor(x, y, radius, color, velocity) {
+      this.x = x;
+      this.y = y;
+      this.radius = radius;
+      this.color = color;
+      this.velocity = velocity;
+    }
+    draw() {
+      c.beginPath();
+      c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+      c.fillStyle = this.color;
+      c.fill();
+    }
+    update() {
+      this.draw();
+      this.x = this.x + this.velocity.x;
+      this.y = this.y + this.velocity.y;
+    }
+  }
+
+  class ServerProjectile {
+    constructor(x, y, radius, color, velocity) {
+      this.x = x;
+      this.y = y;
+      this.radius = radius;
+      this.color = color;
+      this.velocity = velocity;
+    }
+    draw() {
+      c.beginPath();
+      c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+      c.fillStyle = this.color;
+      c.fill();
+    }
+    update() {
+      this.draw();
+      this.x = this.x + this.velocity.x;
+      this.y = this.y + this.velocity.y;
+    }
+  }
+
+  class Enemy {
+    constructor(x, y, radius, color, velocity) {
+      this.x = x;
+      this.y = y;
+      this.radius = radius;
+      this.color = color;
+      this.velocity = velocity;
+    }
+    draw() {
+      c.beginPath();
+      c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+      c.fillStyle = this.color;
+      c.fill();
+    }
+    update() {
+      this.draw();
+      this.x = this.x + this.velocity.x;
+      this.y = this.y + this.velocity.y;
+    }
+  }
+
+  class Ball {
+    constructor(x, y, height, width, velocity) {
+      this.x = x;
+      this.y = y;
+      this.height = height;
+      this.width = width;
+      this.velocity = velocity;
+    }
+    draw() {
+      c.drawImage(
+        img,
+        this.x - 250,
+        this.y - 250,
+        this.height * 1.5,
+        this.width * 1.5
+      );
+    }
+    update() {
+      this.draw();
+      this.x = this.x + this.velocity.x;
+      this.y = this.y + this.velocity.y;
+    }
+  }
+
+  class sizer {
+    constructor(x, y, radius, color, velocity) {
+      this.x = x;
+      this.y = y;
+      this.radius = radius;
+      this.color = color;
+      this.velocity = velocity;
+    }
+    draw() {
+      c.beginPath();
+      c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+      c.fillStyle = this.color;
+      c.fill();
+    }
+    update() {
+      this.draw();
+      this.x = this.x + this.velocity.x;
+      this.y = this.y + this.velocity.y;
+    }
+  }
+
+  const friction = 0.99;
+  class Particle {
+    constructor(x, y, radius, color, velocity) {
+      this.x = x;
+      this.y = y;
+      this.radius = radius;
+      this.color = color;
+      this.velocity = velocity;
+      this.alpha = 1;
+    }
+    draw() {
+      c.save();
+      c.globalAlpha = this.alpha;
+      c.beginPath();
+      c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+      c.fillStyle = this.color;
+      c.fill();
+      c.restore();
+    }
+    update() {
+      this.draw();
+      this.velocity.x *= friction;
+      this.velocity.y *= friction;
+      this.x = this.x + this.velocity.x;
+      this.y = this.y + this.velocity.y;
+      this.alpha -= 0.01;
+    }
+  }
+
+  const x = canvas.width / 2;
+  const y = canvas.height / 2;
+
+  let othersX;
+  let othersY;
+
+  const velocity = {};
+
+  let player = new Player(x, y, 20, "white");
+  let serverPlayer = new Player(othersX, othersY, 20, "white");
+  let projectiles = [];
+  let serverProjectiles = [];
+  let enemies = [];
+  let ballz = [];
+  let particles = [];
+  let sizers = [];
+
+  function init() {
+    player = new Player(x, y, 20, "white");
+    projectiles = [];
+    serverProjectiles = [];
+    enemies = [];
+    ballz = [];
+    particles = [];
+    sizers = [];
+    score = 0;
+    clearInterval(enemyInt);
+    clearInterval(ballInt);
+    clearInterval(sizerInt);
+    spawnEnemies();
+    spawnBallz();
+    spawnSizers();
+    scoreEl.innerHTML = score;
+    bigScoreEl.innerHTML = score;
+    ammoEl.innerHTML = 19;
+    socket.emit("newPlayer", { x: player.x, y: player.y });
+    animate();
+    gameLogic();
+  }
+
+  function spawnEnemies() {
+    enemyInt = setInterval(() => {
+      const radius = Math.random() * (30 - 10) + 10;
+
+      let x;
+      let y;
+
+      if (Math.random() < 0.5) {
+        x = Math.random() < 0.5 ? 0 - radius : canvas.width + radius;
+        y = Math.random() * canvas.height;
+      } else {
+        x = Math.random() * canvas.width;
+        y = Math.random() < 0.5 ? 0 - radius : canvas.height + radius;
+      }
+
+      const color = `hsl(${Math.random() * 360}, 100%, 60%)`;
+
+      const angle = Math.atan2(player.y - y, player.x - x);
+
+      const velocity = {
+        x: Math.cos(angle) * 2.5,
+        y: Math.sin(angle) * 2.5,
+      };
+      enemies.push(new Enemy(x, y, radius, color, velocity));
+    }, 1700);
+  }
+
+  function spawnBallz() {
+    ballInt = setInterval(() => {
+      const height = 250;
+      const width = 250;
+
+      let x;
+      let y;
+
+      x = Math.random() * canvas.width;
+      y = Math.random() * canvas.height;
+
+      const angle = Math.atan2(canvas.height / 2 - y, canvas.width / 2 - x);
+
+      const velocity = {
+        x: Math.cos(angle),
+        y: Math.sin(angle),
+      };
+
+      ballz.push(new Ball(x, y, height, width, velocity));
+    }, 45000);
+  }
+
+  function spawnSizers() {
+    sizerInt = setInterval(() => {
+      const radius = Math.random() * (30 - 7) + 7;
+
+      let x;
+      let y;
+
+      if (Math.random() < 0.5) {
+        x = Math.random() < 0.5 ? 0 - radius : canvas.width + radius;
+        y = Math.random() * canvas.height;
+      } else {
+        x = Math.random() * canvas.width;
+        y = Math.random() < 0.5 ? 0 - radius : canvas.height + radius;
+      }
+
+      const color = "white";
+
+      const angle = Math.atan2(canvas.height / 2 - y, canvas.width / 2 - x);
+
+      const velocity = {
+        x: Math.cos(angle) * 6,
+        y: Math.sin(angle) * 6,
+      };
+
+      sizers.push(new sizer(x, y, radius, color, velocity));
+    }, 25000);
+  }
+
+  let clientPlayers = {};
+
+  let playerId;
+
+  socket.on("gameStarted", () => {
+    socket.on("updatePlayers", players => {
+      playersFound = {};
+
+      for (let id in players) {
+        if (id !== socket.id) {
+          serverPlayer = new Player(othersX, othersY, 20, "white");
+          playerId = id;
+
+          function others() {
+            requestAnimationFrame(others);
+            othersX = players[id].x;
+            othersY = players[id].y;
+          }
+          others();
+
+          clientPlayers[id] = serverPlayer;
+        }
+
+        playersFound[id] = true;
+      }
+
+      for (let id in clientPlayers) {
+        if (!playersFound[id]) {
+          clientPlayers[id].remove;
+          delete clientPlayers[id];
+        }
+      }
+    });
+
+    socket.on("projDirection", data => {
+      const velocity = {
+        x: data.x,
+        y: data.y,
+      };
+      serverProjectiles.push(
+        new ServerProjectile(
+          serverPlayer.x + serverPlayer.radius * Math.cos(data.angle),
+          serverPlayer.y + serverPlayer.radius * Math.sin(data.angle),
+          5,
+          "white",
+          velocity
+        )
+      );
+    });
+
+    let gameLogicFrame;
+
+    socket.on("shrinkPlayer", data => {
+      if (data === socket.id) {
+        player.radius = player.radius - 10;
+      }
+    });
+
+    socket.on("bigPlayer", data => {
+      if (data === socket.id) {
+        serverPlayer.radius = serverPlayer.radius + 0.5;
+      }
+    });
+
+    socket.on("stopAnim", data => {
+      if (data === socket.id) {
+        cancelAnimationFrame(animationId);
+        cancelAnimationFrame(gameLogicFrame);
+        modalEl.style.display = "flex";
+      }
+    });
+  });
+  function gameLogic() {
+    socket.emit("update", { x: player.x, y: player.y });
+    gameLogicFrame = requestAnimationFrame(gameLogic);
+  }
+
+  let executed = false;
+
+  let animationId;
+  let score = 0;
+  let highScore = 0;
+  function animate() {
+    animationId = requestAnimationFrame(animate);
+    c.fillStyle = "rgba(0, 0, 0, 0.3)";
+    c.fillRect(0, 0, canvas.width, canvas.height);
+    player.draw();
+    player.Movement();
+    serverPlayer.draw();
+    projectiles.forEach((projectile, index) => {
+      projectile.update();
+
+      //rem from edges of screen
+      if (
+        projectile.x + projectile.radius < 0 ||
+        projectile.x - projectile.radius > canvas.width ||
+        projectile.y + projectile.radius < 0 ||
+        projectile.y - projectile.radius > canvas.height
+      ) {
+        setTimeout(() => {
+          projectiles.splice(index, 1);
+          socket.emit("projSpliced");
+        }, 0);
+      }
+      const dist = Math.hypot(
+        projectile.x - serverPlayer.x,
+        projectile.y - serverPlayer.y
+      );
+
+      //when proj touch serverPlayer
+      if (dist - serverPlayer.radius - projectile.radius < 1) {
+        //increase score
+
+        score += 25;
+        scoreEl.innerHTML = score;
+        // explosions
+        for (let i = 0; i < serverPlayer.radius * 2; i++) {
+          particles.push(
+            new Particle(
+              projectile.x,
+              projectile.y,
+              Math.random() * 2,
+              serverPlayer.color,
+              {
+                x: (Math.random() - 0.5) * Math.random() * 6,
+                y: (Math.random() - 0.5) * Math.random() * 6,
+              }
+            )
+          );
+        }
+        if (serverPlayer.radius - 10 > 10) {
+          gsap.to(serverPlayer, {
+            radius: serverPlayer.radius - 10,
+          });
+          projectiles.splice(index, 1);
+          socket.emit("shrunk", { playerId });
+        } else {
+          projectiles.splice(index, 1);
+          player.radius = player.radius + 0.5;
+          socket.emit("fatter", socket.id);
+          socket.emit("endGame", { playerId });
+        }
+      }
+    });
+    serverProjectiles.forEach((serverProjectile, serverProjectileIndex) => {
+      serverProjectile.update();
+
+      //rem from edges of screen
+      if (
+        serverProjectile.x + serverProjectile.radius < 0 ||
+        serverProjectile.x - serverProjectile.radius > canvas.width ||
+        serverProjectile.y + serverProjectile.radius < 0 ||
+        serverProjectile.y - serverProjectile.radius > canvas.height
+      ) {
+        setTimeout(() => {
+          serverProjectiles.splice(serverProjectileIndex, 1);
+        }, 0);
+      }
+    });
+    particles.forEach((particle, index) => {
+      if (particle.alpha <= 0) {
+        particles.splice(index, 1);
+      } else {
+        particle.update();
+      }
+    });
+
+    enemies.forEach((enemy, index) => {
+      enemy.update();
+
+      const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+
+      //end game
+      if (dist - enemy.radius - player.radius < 1) {
+        cancelAnimationFrame(animationId);
+        modalEl.style.display = "flex";
+        bigScoreEl.innerHTML = score;
+        if (score > highScoreEl.innerHTML) {
+          highScore = score;
+          highScoreEl.innerHTML = highScore;
+          save();
+        }
+      }
+      projectiles.forEach((projectile, projectilesIndex) => {
+        const dist = Math.hypot(projectile.x - enemy.x, projectile.y - enemy.y);
+
+        //when proj touch enemy
+        if (dist - enemy.radius - projectile.radius < 1) {
+          //increase score
+
+          score += 25;
+          scoreEl.innerHTML = score;
+          // explosions
+          for (let i = 0; i < enemy.radius * 2; i++) {
+            particles.push(
+              new Particle(
+                projectile.x,
+                projectile.y,
+                Math.random() * 2,
+                enemy.color,
+                {
+                  x: (Math.random() - 0.5) * Math.random() * 6,
+                  y: (Math.random() - 0.5) * Math.random() * 6,
+                }
+              )
+            );
+          }
+          if (enemy.radius - 10 > 10) {
+            gsap.to(enemy, {
+              radius: enemy.radius - 10,
+            });
+            projectiles.splice(projectilesIndex, 1);
+          } else {
+            enemies.splice(index, 1);
+            projectiles.splice(projectilesIndex, 1);
+            player.radius = player.radius + 0.5;
+          }
+        }
+      });
+    });
+
+    ballz.forEach((ball, index) => {
+      ball.update();
+
+      const dist = Math.hypot(player.x - ball.x, player.y - ball.y);
+
+      //end game
+      if (
+        dist - ball.height - player.radius < 1 ||
+        dist - ball.width - player.radius < 1
+      ) {
+        cancelAnimationFrame(animationId);
+        modalEl.style.display = "flex";
+        bigScoreEl.innerHTML = score;
+        if (score > highScoreEl.innerHTML) {
+          highScore = score;
+          highScoreEl.innerHTML = highScore;
+          save();
+        }
+      }
+      projectiles.forEach((projectile, projectilesIndex) => {
+        const dist = Math.hypot(projectile.x - ball.x, projectile.y - ball.y);
+
+        //when proj touch enemy
+        if (
+          dist - ball.height - projectile.radius < 1 ||
+          dist - ball.width - projectile.radius < 1
+        ) {
+          //increase score
+          score += 25;
+          scoreEl.innerHTML = score;
+          // explosions
+          for (let i = 0; i < ball.height; i++) {
+            particles.push(
+              new Particle(
+                projectile.x,
+                projectile.y,
+                Math.random() * 2,
+                "white",
+                {
+                  x: (Math.random() - 0.5) * Math.random() * 6,
+                  y: (Math.random() - 0.5) * Math.random() * 6,
+                }
+              )
+            );
+          }
+
+          if (ball.height * ball.width - 10 > 10) {
+            gsap.to(ball, {
+              height: ball.height - 10,
+              width: ball.width - 10,
+            });
+            setTimeout(() => {
+              projectiles.splice(projectilesIndex, 1);
+            }, 0);
+          } else {
+            ballz.splice(index, 1);
+            projectiles.splice(projectilesIndex, 1);
+            player.radius = player.radius + 0.5;
+          }
+        }
+      });
+    });
+
+    sizers.forEach((sizer, index) => {
+      sizer.update();
+
+      projectiles.forEach((projectile, projectilesIndex) => {
+        const dist = Math.hypot(projectile.x - sizer.x, projectile.y - sizer.y);
+
+        //when proj touch sizer
+        if (dist - sizer.radius - projectile.radius < 1) {
+          //decrease size
+
+          // explosions
+          for (let i = 0; i < sizer.radius * 2; i++) {
+            particles.push(
+              new Particle(
+                projectile.x,
+                projectile.y,
+                Math.random() * 2,
+                sizer.color,
+                {
+                  x: (Math.random() - 0.5) * Math.random() * 6,
+                  y: (Math.random() - 0.5) * Math.random() * 6,
+                }
+              )
+            );
+          }
+          if (sizer.radius - 10 > 10) {
+            gsap.to(sizer, {
+              radius: sizer.radius - 10,
+            });
+            projectiles.splice(projectilesIndex, 1);
+          } else {
+            sizers.splice(index, 1);
+            projectiles.splice(projectilesIndex, 1);
+            if (player.radius - 10 > 10) {
+              player.radius = player.radius - 10;
+            }
+          }
+        }
+      });
+    });
+    const ammoInt = parseInt(ammoEl.innerHTML);
+    if (!executed) {
+      addAmmo();
+    }
+    if (ammoInt === 20) {
+      executed = false;
+      clearInterval(ammoInterval);
+    }
+  }
+
+  function addAmmo() {
+    if (ammoInt < 20) {
+      executed = true;
+      ammoInterval = setInterval(() => {
+        ammoEl.innerHTML++;
+      }, 1000);
+    }
+  }
+
+  startGameBtn.addEventListener("click", () => {
+    socket.emit("startGame");
+    var Name = document.getElementById("playerName").value;
+    localStorage.setItem("storedName", Name);
+    modalEl.style.display = "none";
+    init();
+    setTimeout(() => {
+      addEventListener("click", event => {
+        const angle = Math.atan2(
+          event.clientY - player.y,
+          event.clientX - player.x
+        );
+
+        const velocity = {
+          x: Math.cos(angle) * 7,
+          y: Math.sin(angle) * 7,
+        };
+
+        if (ammoEl.innerHTML > 0) {
+          projectiles.push(
+            new Projectile(
+              player.x + player.radius * Math.cos(angle),
+              player.y + player.radius * Math.sin(angle),
+              5,
+              "white",
+              velocity
+            )
+          );
+          socket.emit("projFired", {
+            x: velocity.x,
+            y: velocity.y,
+            angle: angle,
+          });
+          ammoEl.innerHTML--;
+        }
+      });
+    }, 1000);
+  });
+  spawnEnemies();
+  spawnBallz();
+  spawnSizers();
+</script>
