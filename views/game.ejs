@@ -352,14 +352,19 @@
 
   function spawnBallz() {
     ballInt = setInterval(() => {
-      const height = 250;
-      const width = 250;
+      let height = 250;
+      let width = 250;
 
       let x;
       let y;
 
-      x = Math.random() * canvas.width;
-      y = Math.random() * canvas.height;
+      if (Math.random() < 0.5) {
+        x = Math.random() < 0.5 ? 0 - height : canvas.width + height;
+        y = Math.random() * canvas.height;
+      } else {
+        x = Math.random() * canvas.width;
+        y = Math.random() < 0.5 ? 0 - height : canvas.height + height;
+      }
 
       const angle = Math.atan2(canvas.height / 2 - y, canvas.width / 2 - x);
 
