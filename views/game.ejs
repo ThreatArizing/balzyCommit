@@ -224,13 +224,7 @@
       this.velocity = velocity;
     }
     draw() {
-      c.drawImage(
-        img,
-        this.x - 250,
-        this.y - 250,
-        this.height * 1.5,
-        this.width * 1.5
-      );
+      c.drawImage(img, this.x, this.y, this.height, this.width);
     }
     update() {
       this.draw();
@@ -627,15 +621,19 @@
       });
     });
 
-    ballz.forEach((ball, index) => {
-      ball.update();
+    ballz.forEach((square, index) => {
+      square.update();
 
-      const dist = Math.hypot(player.x - ball.x, player.y - ball.y);
+      //const dist = Math.hypot(player.x - square.x, player.y - square.y);
+      const dx = player.x - (square.x + square.width / 2);
+      const dy = player.y - (square.y + square.height / 2);
+      const distance = Math.sqrt(dx * dx + dy * dy);
 
       //end game
       if (
-        dist - ball.height - player.radius < 1 ||
-        dist - ball.width - player.radius < 1
+        distance < player.radius + square.width / 2
+        //dist - square.height - player.radius < 1 ||
+        //dist - square.width - player.radius < 1
       ) {
         cancelAnimationFrame(animationId);
         modalEl.style.display = "flex";
@@ -647,18 +645,19 @@
         }
       }
       projectiles.forEach((projectile, projectilesIndex) => {
-        const dist = Math.hypot(projectile.x - ball.x, projectile.y - ball.y);
+        const dx = projectile.x - (square.x + square.width / 2);
+        const dy = projectile.y - (square.y + square.height / 2);
+        const distance = Math.sqrt(dx * dx + dy * dy);
 
         //when proj touch enemy
         if (
-          dist - ball.height - projectile.radius < 1 ||
-          dist - ball.width - projectile.radius < 1
+          distance < projectile.radius + square.width / 2
         ) {
           //increase score
           score += 25;
           scoreEl.innerHTML = score;
           // explosions
-          for (let i = 0; i < ball.height; i++) {
+          for (let i = 0; i < square.height; i++) {
             particles.push(
               new Particle(
                 projectile.x,
@@ -673,10 +672,10 @@
             );
           }
 
-          if (ball.height * ball.width - 10 > 10) {
-            gsap.to(ball, {
-              height: ball.height - 10,
-              width: ball.width - 10,
+          if (square.height * square.width - 10 > 10) {
+            gsap.to(square, {
+              height: square.height - 10,
+              width: square.width - 10,
             });
             setTimeout(() => {
               projectiles.splice(projectilesIndex, 1);

@@ -105,7 +105,6 @@ async function main() {
       if (serverINT >= newGlobalInt) {
         newGlobal = serverHS;
         Pname = req.body.storedName;
-        //await
         updateListingByName(client, "HS", {
           score: newGlobal,
           globalName: Pname,

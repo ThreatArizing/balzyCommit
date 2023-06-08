@@ -65,9 +65,7 @@
     playerScore.innerHTML = storedItem;
     playerName.value = storedName;
     const playerScores = document.getElementById("highScoreEl").innerHTML;
-    const playerCurrentScore = document.getElementById("scoreEl").innerHTML;
-    localStorage.setItem("storedItem", playerScores);
-    const data = { playerCurrentScore, storedName };
+    const data = { storedItem, storedName };
     const options = {
       method: 'POST',
       headers: {
