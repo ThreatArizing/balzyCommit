@@ -39,17 +39,14 @@
   <%- include("./game.ejs") %>
 </body>
 <script> 
-  const playerScore = document.querySelector("#highScoreEl");
   const storedItem = localStorage.getItem("storedItem");
   
-  const playerName = document.querySelector("#playerName");
-  const storedName = localStorage.getItem("storedName");  
-
-  
   function save() {
-    const playerScores = document.getElementById("highScoreEl").innerHTML;
+    const playerScore = document.getElementById("highScoreEl").innerHTML;
     const playerCurrentScore = document.getElementById("scoreEl").innerHTML;
-    localStorage.setItem("storedItem", playerScores);
+    const storedName = localStorage.getItem("storedName");  
+    localStorage.setItem("storedItem", playerScore);
+    console.log(storedName)
     const data = { playerCurrentScore, storedName };
     const options = {
       method: 'POST',
@@ -62,10 +59,12 @@
   };
     
   function get() {
+    const playerScore = document.getElementById("highScoreEl");
+    const playerName = document.querySelector("#playerName");
+    const storedName = localStorage.getItem("storedName");  
+    const data = { storedItem, storedName };
     playerScore.innerHTML = storedItem;
     playerName.value = storedName;
-    const playerScores = document.getElementById("highScoreEl").innerHTML;
-    const data = { storedItem, storedName };
     const options = {
       method: 'POST',
       headers: {

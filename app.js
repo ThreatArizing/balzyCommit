@@ -67,7 +67,6 @@ function connected(socket) {
     });
     socket.on("disconnect", function () {
       delete players[socket.id];
-      console.log("Goodbye client with id " + socket.id);
       console.log("Current number of players: " + Object.keys(players).length);
       io.emit("updatePlayers", players);
     });
