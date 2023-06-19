@@ -1,6 +1,6 @@
 # Balzy
 
-This is a small game In created as a personal project. I started off following a youtube tutorial for the baic framework of the game mechanics https://www.youtube.com/watch?v=eI9idPTT0c4. The game is avaliable online at https://balzy.onrender.com/ .
+This is a small game I created as a personal project. I started off following a youtube tutorial By ChrisCourses for the baic framework of the game https://www.youtube.com/watch?v=eI9idPTT0c4. The game is avaliable online at https://balzy.onrender.com/ .
 
 ## Hosting by Yourself
 
