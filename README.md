@@ -1,6 +1,6 @@
 # Balzy
 
-This is a small game In created as a personal project. The game is avaliable online at https://balzy.onrender.com/ .
+This is a small game In created as a personal project. I started off following a youtube tutorial for the baic framework of the game mechanics https://www.youtube.com/watch?v=eI9idPTT0c4. The game is avaliable online at https://balzy.onrender.com/ .
 
 ## Hosting by Yourself
 
@@ -8,7 +8,7 @@ This is a small game In created as a personal project. The game is avaliable onl
 
 1. Install dependencies: [`Visual Studio Code (VSCode)`](https://code.visualstudio.com/download), [`Node.js`](https://nodejs.org/en/download), and [`Git`](https://git-scm.com/downloads)
 2. Open your local terminal `VSCode`
-   - Type Type **Ctrl + `** (not including the '+', '+' is notation for a keyboard combination)
+   - Type Type **Ctrl + `**
 3. Navigate to the directory where you want the project by running the command in the terminal:
    - `cd "C:\Users\[path_to_Desktop]\Desktop"`
 4. Clone this Git repository and change to the new project's directory, again in the terminal:
